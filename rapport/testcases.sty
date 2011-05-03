@@ -1,0 +1,74 @@
+\ProvidesPackage{testcases}
+
+% Avancerade tabeller
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{booktabs}
+
+% Hax för att tabularx ska fungera i environments
+\makeatletter
+\def\TX@find@end#1{\def\@tempa{#1} \ifx\@tempa\TX@ \toks@\expandafter{\the\toks@\AddBeforeEndtabularx}\expandafter\TX@endtabularx \else\toks@\expandafter {\the\toks@\end{#1}}\expandafter\TX@get@body\fi} \makeatother
+\def\AddBeforeEndtabularx{
+		\bottomrule}
+% Hax för tunnare listor
+\makeatletter
+\newcommand\novspace{\@minipagetrue}
+\makeatother
+
+% Test case counter
+\newcounter{testcasecounter}
+
+\newenvironment{testcase}[1]{
+	\refstepcounter{testcasecounter}
+	\label{#1}
+	\table[H]
+	\tabularx{\textwidth}{>{\bfseries}p{2.5cm}  X }
+		\multicolumn{2}{c}{\large\textbf{Testfall \thetestcasecounter:} #1} \\[0.1cm]
+		%\toprule	Beskrivning				& #1 \\
+}{
+	\endtabularx
+	\endtable
+}
+
+\newcommand{\prereq}[1]{\midrule	Förkrav				& #1 \\}
+\newcommand{\actions}[1]{\midrule	Körning				& #1 \\}
+\newcommand{\result}[1]{\midrule	Förväntat resultat	& #1 \\}
+
+	% Actionlist for results
+	\newenvironment{actionlist}{
+		\novspace
+		\enumerate
+	    \setlength{\itemsep}{0pt}
+	    \setlength{\parskip}{0pt}
+	    \setlength{\parsep}{0pt}
+	    \setlength{\partopsep}{0pt}
+	    \setlength{\topsep}{0pt}
+	}{
+		\vspace{-1em}
+		\endenumerate
+	}
+	% Checklist for results
+	\newenvironment{checklist}{
+		\novspace
+		\itemize
+	    \setlength{\itemsep}{0pt}
+	    \setlength{\parskip}{0pt}
+	    \setlength{\parsep}{0pt}
+	    \setlength{\partopsep}{0pt}
+	    \setlength{\topsep}{0pt}
+		\renewcommand{\labelitemi}{$\Box$}
+	}{
+		\vspace{-1em}
+		\enditemize
+	}
+
+% Test results
+\newenvironment{testresults}[1]{
+	\tabularx{\textwidth}{>{\bfseries}l  X }
+		\multicolumn{2}{c}{\large\textbf{Testfallsresultat #1}} \\[0.1cm]
+		\toprule
+}{
+	\endtabularx
+}
+
+\newcommand{\testresult}[2]{\ref{#1}. #1 & #2 \\}
