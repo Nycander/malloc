@@ -79,8 +79,8 @@ int main(int argc, char *argv[]){
 
   highbreak = sbrk(0);
   
-  fprintf(stderr, "%s, line %d: lowbreak = 0x%x, highbreak = 0x%x\n",
-	  progname, __LINE__, (unsigned) lowbreak, (unsigned) highbreak);
+  fprintf(stderr, "%s, line %d: lowbreak = 0x%lx, highbreak = 0x%lx\n",
+	  progname, __LINE__, (unsigned long) lowbreak, (unsigned long) highbreak);
   MESSAGE("Freeing memory at highbreak\n");
   if ( setjmp(env) == 0 )  free(highbreak);
   MESSAGE("Freeing memory at lowbreak\n");

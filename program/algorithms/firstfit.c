@@ -1,5 +1,5 @@
 #include <unistd.h>
-
+#include <string.h>
 #include "../malloc.h"
 #include "../brk.h"
 
@@ -110,35 +110,55 @@ void *malloc(size_t nbytes)
 	}
 }
 
-/* free: put block ap in free list */
-void free(void *ap)
+/* free: put block in free list */
+void free(void *target)
 {
-	if (ap == NULL)
+	if (target == NULL)
 		return;
 	
-	Header *bp, *p;
-	bp = (Header *)ap - 1; /* point to block header */
-	for (p = freelist; !(bp > p && bp < p->s.pointer); p = p->s.pointer)
-		if (p >= p->s.pointer && (bp > p || bp < p->s.pointer))
-			break; /* freed block at start or end of arena */
-	
-	if (bp + bp->s.size == p->s.pointer)
-	{ 
-		/* join to new_slotper nbr */
-		bp->s.size += p->s.pointer->s.size;
-		bp->s.pointer = p->s.pointer->s.pointer;
-	}
-	else
-		bp->s.pointer = p->s.pointer;
-	
-	if (p + p->s.size == bp)
+	Header *target_head, *p;
+	target_head = (Header *)target - 1; /* point to block header */
+	p = freelist;
+
+	while(1)
 	{
-		/* join to lower nbr */
-		p->s.size += bp->s.size;
-		p->s.pointer = bp->s.pointer;
+		/* Is the freed block in between two free blocks? */
+		if (p <= target_head && p->s.pointer >= target_head)
+			break;
+		
+		/* Are we still counting upwards in memory? */
+		if (p >= p->s.pointer)
+		{
+			/* Free'd block at start of area */
+			if (p <= target_head)
+				break;
+		
+			/* Free'd block at end of area */
+			if (p->s.pointer >= target_head)
+				break;
+		}
+		
+		/* Increment counter */ 
+		p = p->s.pointer;
+	}
+
+	/* Join target to higher nbr */
+	if (target_head + target_head->s.size == p->s.pointer)
+	{ 
+		target_head->s.size += p->s.pointer->s.size;
+		target_head->s.pointer = p->s.pointer->s.pointer;
 	}
 	else
-		p->s.pointer = bp;
+		target_head->s.pointer = p->s.pointer;
+	
+	/* Join target to lower nbr */
+	if (p + p->s.size == target_head)
+	{
+		p->s.size += target_head->s.size;
+		p->s.pointer = target_head->s.pointer;
+	}
+	else
+		p->s.pointer = target_head;
 	
 	freelist = p;
 }

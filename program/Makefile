@@ -18,7 +18,7 @@ all: $(BIN)
 	exec ./RUN_TESTS
 
 t0: tstmerge.o malloc.o $(X)
-	$(CC) $(CFLAGS) -o  $@ tstmerge.o malloc.o $(X)
+	$(CC) $(CFLAGS) -Werror -o  $@ tstmerge.o malloc.o $(X)
 
 t1: tstalgorithms.o malloc.o $(X)
 	$(CC) $(CFLAGS) -o  $@ tstalgorithms.o malloc.o $(X)

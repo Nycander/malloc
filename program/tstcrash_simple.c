@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "tst.h"
+#include "brk.h"
 
 char *progname;
 
@@ -43,8 +44,8 @@ int main(int argc, char *argv[]){
   free(lowbreak);
   MESSAGE("Freeing memory at highbreak\n");
   free(highbreak);
-  fprintf(stderr, "%s, line %d: lowbreak = 0x%x, highbreak = 0x%x\n",
-	progname, __LINE__, (unsigned) lowbreak, (unsigned) highbreak);
+  fprintf(stderr, "%s, line %d: lowbreak = 0x%lx, highbreak = 0x%lx\n",
+	progname, __LINE__, (unsigned long) lowbreak, (unsigned long) highbreak);
 
   /*
    * TEST 2

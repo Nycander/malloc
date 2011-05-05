@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 #include "tst.h"
+#include "brk.h"
 
 #define SIZE 128
 #define BIGSIZE 100
@@ -44,7 +45,7 @@ int main(int argc, char *argv[]){
       free(a[j]);
     }
     if ( i % 10 == 0 ) 
-      fprintf(stderr, "%s: Using total of 0x%x of memory\n",
+      fprintf(stderr, "%s: Using total of 0x%lx of memory\n",
 	      progname, highbreak - lowbreak); 
 
   }
@@ -68,7 +69,7 @@ int main(int argc, char *argv[]){
     for(j = 0; j < BIGSIZE; j++){
       free(b[j]);
     }
-    fprintf(stderr, "%s: Using total of 0x%x of memory\n", 
+    fprintf(stderr, "%s: Using total of 0x%lx of memory\n", 
 	    progname, highbreak - lowbreak);
 
   }
