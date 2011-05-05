@@ -44,7 +44,7 @@ static Header *morecore(unsigned nu)
 /* malloc: general-purpose storage allocator */
 void *malloc(size_t nbytes)
 {
-	Header *p, *current_pointer;
+	Header *current_pointer, *previous_pointer;
 	unsigned int nunits;
 
 	/* Don't allocate blocks with zero bytes */
@@ -56,47 +56,53 @@ void *malloc(size_t nbytes)
 	/* Use number magic to get good roundoff */
 	nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
 
-	current_pointer = freelist;
+	previous_pointer = freelist;
 
 	/* First run, initialize the free list */	
-	if (current_pointer == NULL) 
+	if (previous_pointer == NULL) 
 	{
-		base.s.pointer = freelist = current_pointer = &base;
+		base.s.pointer = freelist = previous_pointer = &base;
 		base.s.size = 0;
 	}
 
+	current_pointer = previous_pointer->s.pointer;
+
 	/* Go through all elements in the free list */
-	for (p = current_pointer->s.pointer; ; current_pointer = p, p = p->s.pointer)
+	for (;;)
 	{
-		if (p->s.size >= nunits) 
+		/* Is this slot big enough? */
+		if (current_pointer->s.size >= nunits) 
 		{ 
-			/* big enough */
-			if (p->s.size == nunits) 
+			/* Is it exactly big enough? */
+			if (current_pointer->s.size == nunits) 
 			{
-				/* exactly */
-				current_pointer->s.pointer = p->s.pointer;
+				previous_pointer->s.pointer = current_pointer->s.pointer;
 			}
 			else 
 			{
 				/* allocate tail end */
-				p->s.size -= nunits;
-				p += p->s.size;
-				p->s.size = nunits;
+				current_pointer->s.size -= nunits;
+				current_pointer += current_pointer->s.size;
+				current_pointer->s.size = nunits;
 			}
-			freelist = current_pointer;
-			return (void *)(p+1);
+			freelist = previous_pointer;
+			return (void *)(current_pointer+1);
 		}
 	
 		/* Have we looked at all elements in the list? */
-		if (p == freelist)
+		if (current_pointer == freelist)
 		{
 			/* Ask for more memory! */
-			if ((p = morecore(nunits)) == NULL)
+			if ((current_pointer = morecore(nunits)) == NULL)
 			{
 				/* Memory full */
 				return NULL;
 			}
 		}
+		
+		/* Increment pointers */
+		previous_pointer = current_pointer;
+		current_pointer = current_pointer->s.pointer
 	}
 }
 
