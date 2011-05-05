@@ -76,12 +76,14 @@ void *malloc(size_t nbytes)
 			/* Is it exactly big enough? */
 			if (current_pointer->s.size == nunits) 
 			{
+				/* Remove the slot */
 				previous_pointer->s.pointer = current_pointer->s.pointer;
 			}
 			else 
 			{
-				/* allocate tail end */
+				/* Remove bytes from slot */
 				current_pointer->s.size -= nunits;
+				/* Create a new slot at the end of the big slot */ 
 				current_pointer += current_pointer->s.size;
 				current_pointer->s.size = nunits;
 			}
