@@ -4,28 +4,20 @@ echo ""
 echo "- If you have any problem in passing a test read the corresponding"
 echo "- source file to understand what the test is checking"
 echo ""
-echo -n "********************* TEST MERGE ... "
-read answ
+echo  "********************* TEST MERGE ... "
 ./t0
-echo -n "********************* TEST ALGORITHMS ... "
-read answ
+echo  "********************* TEST ALGORITHMS ... "
 ./t1
-echo -n "********************* TEST EXTREME USAGE ... "
-read ans
+echo  "********************* TEST EXTREME USAGE ... "
 ./t2
-echo -n "********************* TEST MALLOC ... "
-read ans
+echo  "********************* TEST MALLOC ... "
 ./t3
-echo -n "********************* TEST MEMORY ... "
-read ans
+echo  "********************* TEST MEMORY ... "
 ./t4
-echo -n "********************* TEST REALLOC ... "
-read ans
+echo  "********************* TEST REALLOC ... "
 ./t5
-echo -n "********************* TEST CRASH  SIMPLE ... "
-read ans
+echo  "********************* TEST CRASH  SIMPLE ... "
 ./t6
-echo -n "********************* TEST CRASH COMPLEX ...  "
-read ans
+echo  "********************* TEST CRASH COMPLEX ...  "
 ./t7
 

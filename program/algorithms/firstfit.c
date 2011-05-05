@@ -44,6 +44,9 @@ static Header *morecore(unsigned nu)
 /* malloc: general-purpose storage allocator */
 void *malloc(size_t nbytes)
 {
+	if (nbytes == 0)
+		return NULL;
+
 	Header *p, *prevp;
 	unsigned int nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
 	if ((prevp = freelist) == NULL) 
@@ -81,6 +84,9 @@ void *malloc(size_t nbytes)
 /* free: put block ap in free list */
 void free(void *ap)
 {
+	if (ap == NULL)
+		return;
+	
 	Header *bp, *p;
 	bp = (Header *)ap - 1; /* point to block header */
 	for (p = freelist; !(bp > p && bp < p->s.ptr); p = p->s.ptr)
