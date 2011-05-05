@@ -75,6 +75,14 @@
 \setcounter{page}{1}
 \section{Problembeskrivning}
 
+De olika minnesallokeringsmetoderna som ska implementeras är:
+
+\begin{description}
+	\item[First-fit] Första bästa tillräckligt stora blocket används.
+	\item[Best-fit] Det minsta lediga blocket med tillräckligt många bytes allokeras.
+	\item[Worst-fit] Det största lediga blocket används och fragmenteras.
+	\item[Quick-fit] Som Best-fit, men istället för att alla block kontrolleras så har man ett antal listor med minne av olika storlek.
+\end{description}
 
 \subsection{Förberedelsefråga}
 
@@ -98,12 +106,7 @@
 % TODO: Noggrannhet?
 
 \newpage
-\section{Resultat}
-
-
-\newpage
 \section{Labbutvärdering}
 
-\newpage
 
 \end{document}

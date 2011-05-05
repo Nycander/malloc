@@ -1,6 +1,6 @@
 #include <unistd.h>
 
-#define NALLOC 1024 /* minimum #units to request */
+#define NALLOC 1024 /* minimum number of units to request */
 
 typedef long Align; /* for alignment to long boundary */
 union header
