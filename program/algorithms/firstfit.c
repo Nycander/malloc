@@ -11,7 +11,7 @@ union header
 	/* block header */
 	struct
 	{
-		union header *ptr; /* next block if on free list */
+		union header *pointer; /* next block if on free list */
 		unsigned size; /* size of this block */
 	} s;
 	Align x; /* force alignment of blocks */
@@ -44,18 +44,29 @@ static Header *morecore(unsigned nu)
 /* malloc: general-purpose storage allocator */
 void *malloc(size_t nbytes)
 {
-	if (nbytes == 0)
-		return NULL;
+	Header *p, *current_pointer;
+	unsigned int nunits;
 
-	Header *p, *prevp;
-	unsigned int nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
-	if ((prevp = freelist) == NULL) 
+	/* Don't allocate blocks with zero bytes */
+	if (nbytes == 0)
 	{
-		/* no free list yet */
-		base.s.ptr = freelist = prevp = &base;
+		return NULL;
+	}
+
+	/* Use number magic to get good roundoff */
+	nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
+
+	current_pointer = freelist;
+
+	/* First run, initialize the free list */	
+	if (current_pointer == NULL) 
+	{
+		base.s.pointer = freelist = current_pointer = &base;
 		base.s.size = 0;
 	}
-	for (p = prevp->s.ptr; ; prevp = p, p = p->s.ptr)
+
+	/* Go through all elements in the free list */
+	for (p = current_pointer->s.pointer; ; current_pointer = p, p = p->s.pointer)
 	{
 		if (p->s.size >= nunits) 
 		{ 
@@ -63,7 +74,7 @@ void *malloc(size_t nbytes)
 			if (p->s.size == nunits) 
 			{
 				/* exactly */
-				prevp->s.ptr = p->s.ptr;
+				current_pointer->s.pointer = p->s.pointer;
 			}
 			else 
 			{
@@ -72,12 +83,20 @@ void *malloc(size_t nbytes)
 				p += p->s.size;
 				p->s.size = nunits;
 			}
-			freelist = prevp;
+			freelist = current_pointer;
 			return (void *)(p+1);
 		}
-		if (p == freelist) /* wrapped around free list */
+	
+		/* Have we looked at all elements in the list? */
+		if (p == freelist)
+		{
+			/* Ask for more memory! */
 			if ((p = morecore(nunits)) == NULL)
-				return NULL; /* none left */
+			{
+				/* Memory full */
+				return NULL;
+			}
+		}
 	}
 }
 
@@ -89,27 +108,27 @@ void free(void *ap)
 	
 	Header *bp, *p;
 	bp = (Header *)ap - 1; /* point to block header */
-	for (p = freelist; !(bp > p && bp < p->s.ptr); p = p->s.ptr)
-		if (p >= p->s.ptr && (bp > p || bp < p->s.ptr))
+	for (p = freelist; !(bp > p && bp < p->s.pointer); p = p->s.pointer)
+		if (p >= p->s.pointer && (bp > p || bp < p->s.pointer))
 			break; /* freed block at start or end of arena */
 	
-	if (bp + bp->s.size == p->s.ptr)
+	if (bp + bp->s.size == p->s.pointer)
 	{ 
 		/* join to upper nbr */
-		bp->s.size += p->s.ptr->s.size;
-		bp->s.ptr = p->s.ptr->s.ptr;
+		bp->s.size += p->s.pointer->s.size;
+		bp->s.pointer = p->s.pointer->s.pointer;
 	}
 	else
-		bp->s.ptr = p->s.ptr;
+		bp->s.pointer = p->s.pointer;
 	
 	if (p + p->s.size == bp)
 	{
 		/* join to lower nbr */
 		p->s.size += bp->s.size;
-		p->s.ptr = bp->s.ptr;
+		p->s.pointer = bp->s.pointer;
 	}
 	else
-		p->s.ptr = bp;
+		p->s.pointer = bp;
 	
 	freelist = p;
 }
@@ -117,7 +136,7 @@ void free(void *ap)
 
 void *realloc(void * oldpointer, size_t new_size)
 {
-	/* If ptr is NULL, then the call is equivalent to malloc */
+	/* If pointer is NULL, then the call is equivalent to malloc */
 	if (oldpointer == NULL)
 	{
 		return malloc(new_size);
@@ -139,3 +158,4 @@ void *realloc(void * oldpointer, size_t new_size)
 	free(oldpointer);
 	return newpointer;
 }
+

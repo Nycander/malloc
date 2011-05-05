@@ -107,3 +107,29 @@ void *malloc(size_t nbytes)
 				return NULL; /* none left */
 	}
 }
+
+void *realloc(void * oldpointer, size_t new_size)
+{
+	/* If ptr is NULL, then the call is equivalent to malloc */
+	if (oldpointer == NULL)
+	{
+		return malloc(new_size);
+	}
+	/* If size is equal to zero then the call is equivalent to free */
+	if (new_size == 0)
+	{
+		free(oldpointer);
+		return NULL;
+	}
+	int old_size = (((Header*)oldpointer - 1)->s.size-1)*sizeof(Header);
+
+	/* Allocate new space, copy contents and free old space */
+	void * newpointer = malloc(new_size);
+	
+	int copy_size = (old_size < new_size ? old_size : new_size);
+
+	newpointer = memcpy(newpointer, oldpointer, copy_size);
+	free(oldpointer);
+	return newpointer;
+}
+
