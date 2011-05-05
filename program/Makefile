@@ -6,9 +6,9 @@ OBJ	= malloc.o tstalgorithms.o  tstcrash_simple.o\
 
 BIN	= t0 t1 t2 t3 t4 t5 t6 t7
 
-CFLAGS	= -g -Wall -ansi -DSTRATEGY=2
+CFLAGS	= -g -Wall -ansi -DSTRATEGY=1
 
-XFLAGS	= -g -Wall -DSTRATEGY=2
+XFLAGS	= -g -Wall -DSTRATEGY=1
 
 #CC	= gcc -ansi -pedantic -Wall -g -pipe -O -pg
 CC	= gcc 
@@ -18,7 +18,7 @@ all: $(BIN)
 	exec ./RUN_TESTS
 
 t0: tstmerge.o malloc.o $(X)
-	$(CC) $(CFLAGS) -o  $@ tstmerge.o malloc.o $(X)
+	$(CC) $(CFLAGS) -Werror -o  $@ tstmerge.o malloc.o $(X)
 
 t1: tstalgorithms.o malloc.o $(X)
 	$(CC) $(CFLAGS) -o  $@ tstalgorithms.o malloc.o $(X)

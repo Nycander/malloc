@@ -34,6 +34,7 @@
 #include <unistd.h>
 #include <time.h>
 #include "tst.h"
+#include "brk.h"
 
 #define MAXPOSTS 2000
 #define MAXSIZE  2048

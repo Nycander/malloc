@@ -12,7 +12,8 @@ int main(int argc, char *argv[]){
   int i;
   char *p, *q, *r;
   size_t pagesize;
-  caddr_t lowbreak, highbreak;
+  void *lowbreak;
+  void *highbreak;
   char *progname;
 
   if (argc > 0)
@@ -36,7 +37,7 @@ int main(int argc, char *argv[]){
 
   highbreak = sbrk(0);
 
-  fprintf(stderr,"%s: Used memory in test: 0x%x (= %2.2f * pagesize)\n",
+  fprintf(stderr,"%s: Used memory in test: 0x%lx (= %2.2f * pagesize)\n",
 	  progname, highbreak - lowbreak,
 	  ( 1.0 * ( highbreak - lowbreak )) / pagesize);
   if ( highbreak - lowbreak > 7 * pagesize )
