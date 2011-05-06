@@ -11,7 +11,7 @@ union header
 	/* block header */
 	struct
 	{
-		union header *pointer; /* next block if on free list */
+		union header *next; /* next block if on free list */
 		unsigned int size; /* size of this block */
 	} s;
 	Align x; /* force alignment of blocks */
@@ -61,11 +61,11 @@ void *malloc(size_t nbytes)
 	/* First run, initialize the free list */	
 	if (previous_pointer == NULL) 
 	{
-		base.s.pointer = freelist = previous_pointer = &base;
+		base.s.next = freelist = previous_pointer = &base;
 		base.s.size = 0;
 	}
 
-	current_pointer = previous_pointer->s.pointer;
+	current_pointer = previous_pointer->s.next;
 
 	/* Go through all elements in the free list */
 	for (;;)
@@ -77,7 +77,7 @@ void *malloc(size_t nbytes)
 			if (current_pointer->s.size == nunits) 
 			{
 				/* Remove the slot */
-				previous_pointer->s.pointer = current_pointer->s.pointer;
+				previous_pointer->s.next = current_pointer->s.next;
 			}
 			else 
 			{
@@ -105,7 +105,7 @@ void *malloc(size_t nbytes)
 		
 		/* Increment pointers */
 		previous_pointer = current_pointer;
-		current_pointer = current_pointer->s.pointer;
+		current_pointer = current_pointer->s.next;
 	}
 }
 
@@ -119,48 +119,49 @@ void free(void *target)
 	Header *target_head = (Header *)target - 1; /* Point to block header */
 	
 	/* Go through the free list in an attempt to find a block to merge with */
-	for(p = freelist; ;p = p->s.pointer)
+	for(p = freelist; ;p = p->s.next)
 	{
 		/* Is the freë́'d block in between two free blocks? */
-		if (p <= target_head && p->s.pointer >= target_head)
+		if (p <= target_head && p->s.next >= target_head)
 			break;
 		
-		/* Are we still counting upwards in memory? */
-		if (p >= p->s.pointer)
+		/* Are we not counting upwards in memory? */
+		/* Eqv. - Have we checked all slots? */
+		if (p >= p->s.next)
 		{
 			/* Free'd block at start of area */
-			if (p <= target_head)
+			if (target_head > p)
 				break;
 		
 			/* Free'd block at end of area */
-			if (p->s.pointer >= target_head)
+			if (target_head < p->s.next)
 				break;
 		}
 	}
 	/* After this loop, p should be set to a block next to the target block in memory */
 
-	/* Join target to higher nbr */
-	if (target_head + target_head->s.size == p->s.pointer)
+	/* Join target to p.next */
+	if (target_head + target_head->s.size == p->s.next)
 	{ 
-		target_head->s.size += p->s.pointer->s.size;
-		target_head->s.pointer = p->s.pointer->s.pointer;
+		target_head->s.size += p->s.next->s.size;
+		target_head->s.next = p->s.next->s.next;
 	}
 	else
 	{
 		/* Merge up failed, just link them together */
-		target_head->s.pointer = p->s.pointer;
+		target_head->s.next = p->s.next;
 	}
 	
-	/* Join target to lower nbr */
+	/* Join target to p */
 	if (p + p->s.size == target_head)
 	{
 		p->s.size += target_head->s.size;
-		p->s.pointer = target_head->s.pointer;
+		p->s.next = target_head->s.next;
 	}
 	else
 	{
 		/* Merge down failed, just link them together */
-		p->s.pointer = target_head;
+		p->s.next = target_head;
 	}
 	
 	/* The free list now starts at p */
