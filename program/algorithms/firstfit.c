@@ -53,7 +53,7 @@ void *malloc(size_t nbytes)
 		return NULL;
 	}
 
-	/* Use number_of_unitsmber magic to get good roundoff */
+	/* Use number magic to get good roundoff */
 	nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
 
 	previous_pointer = freelist;
@@ -122,7 +122,7 @@ void free(void *target)
 	/* Go through the free list in an attempt to find a block to merge with */
 	for(p = freelist; ;p = p->s.pointer;)
 	{
-		/* Is the freed block in between two free blocks? */
+		/* Is the freë́'d block in between two free blocks? */
 		if (p <= target_head && p->s.pointer >= target_head)
 			break;
 		
