@@ -87,7 +87,6 @@ void *malloc(size_t nbytes)
 				current_pointer += current_pointer->s.size;
 				current_pointer->s.size = nunits;
 			}
-			freelist = previous_pointer;
 			return (void *)(current_pointer+1);
 		}
 	
@@ -120,7 +119,7 @@ void free(void *target)
 	Header *target_head = (Header *)target - 1; /* Point to block header */
 	
 	/* Go through the free list in an attempt to find a block to merge with */
-	for(p = freelist; ;p = p->s.pointer;)
+	for(p = freelist; ;p = p->s.pointer)
 	{
 		/* Is the freë́'d block in between two free blocks? */
 		if (p <= target_head && p->s.pointer >= target_head)
