@@ -26,16 +26,16 @@ static Header *freelist = NULL;
 /* morecore: ask system for more memory */
 static Header *morecore(unsigned int number_of_units)
 {
-	char *cp;
+	char * previous_program_break;
 	Header *new_slot;
 	if (number_of_units < NALLOC)
 		number_of_units = NALLOC;
 	
-	cp = sbrk(number_of_units * sizeof(Header));
-	if (cp == (char *) -1) /* no space at all */
+	previous_program_break = sbrk(number_of_units * sizeof(Header));
+	if (previous_program_break == (char *) -1) /* no space at all */
 		return NULL;
 	
-	new_slot = (Header *) cp;
+	new_slot = (Header *) previous_program_break;
 	new_slot->s.size = number_of_units;
 	free((void *)(new_slot+1));
 	return freelist;
@@ -56,15 +56,15 @@ void *malloc(size_t nbytes)
 	/* Use number magic to get good roundoff */
 	nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
 
-	previous_pointer = freelist;
 
 	/* First run, initialize the free list */	
-	if (previous_pointer == NULL) 
+	if (freelist== NULL) 
 	{
-		base.s.next = freelist = previous_pointer = &base;
+		base.s.next = freelist = &base;
 		base.s.size = 0;
 	}
 
+	previous_pointer = freelist;
 	current_pointer = previous_pointer->s.next;
 
 	/* Go through all elements in the free list */
@@ -72,7 +72,7 @@ void *malloc(size_t nbytes)
 	{
 		/* Is this slot big enough? */
 		if (current_pointer->s.size >= nunits) 
-		{ 
+		{
 			/* Is it exactly big enough? */
 			if (current_pointer->s.size == nunits) 
 			{
@@ -163,9 +163,6 @@ void free(void *target)
 		/* Merge down failed, just link them together */
 		p->s.next = target_head;
 	}
-	
-	/* The free list now starts at p */
-	freelist = p;
 }
 
 
