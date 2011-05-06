@@ -116,11 +116,11 @@ void free(void *target)
 	if (target == NULL)
 		return;
 	
-	Header *target_head, *p;
-	target_head = (Header *)target - 1; /* point to block header */
-	p = freelist;
-
-	while(1)
+	Header *p;
+	Header *target_head = (Header *)target - 1; /* Point to block header */
+	
+	/* Go through the free list in an attempt to find a block to merge with */
+	for(p = freelist; ;p = p->s.pointer;)
 	{
 		/* Is the freed block in between two free blocks? */
 		if (p <= target_head && p->s.pointer >= target_head)
@@ -137,10 +137,8 @@ void free(void *target)
 			if (p->s.pointer >= target_head)
 				break;
 		}
-		
-		/* Increment counter */ 
-		p = p->s.pointer;
 	}
+	/* After this loop, p should be set to a block next to the target block in memory */
 
 	/* Join target to higher nbr */
 	if (target_head + target_head->s.size == p->s.pointer)
@@ -149,7 +147,10 @@ void free(void *target)
 		target_head->s.pointer = p->s.pointer->s.pointer;
 	}
 	else
+	{
+		/* Merge up failed, just link them together */
 		target_head->s.pointer = p->s.pointer;
+	}
 	
 	/* Join target to lower nbr */
 	if (p + p->s.size == target_head)
@@ -158,8 +159,12 @@ void free(void *target)
 		p->s.pointer = target_head->s.pointer;
 	}
 	else
+	{
+		/* Merge down failed, just link them together */
 		p->s.pointer = target_head;
+	}
 	
+	/* The free list now starts at p */
 	freelist = p;
 }
 
