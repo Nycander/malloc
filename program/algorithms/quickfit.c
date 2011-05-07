@@ -54,7 +54,7 @@ static Header* allocate_blocks(Header * list, unsigned int units, unsigned int b
 	
 	for(i = 0; i < blocks; i++)
 	{
-		new_slot = (Header *) previous_program_break + sizeof(Header)*units*i;
+		new_slot = (Header *) (previous_program_break + sizeof(Header)*units*i);
 		new_slot->s.size = units;
 		free((void*)(new_slot+1));
 	}
@@ -94,8 +94,8 @@ void *malloc(size_t nbytes)
 			continue;
 		
 		/* No blocks here? -- Allocate some! */
-		if (freelists[i]->s.size == 0)
-			if (allocate_blocks(freelists[i], max_units, 3) == NULL)
+		if (freelists[i] == NULL || freelists[i]->s.size == 0)
+			if (allocate_blocks(freelists[i], max_units, 1) == NULL)
 				return NULL; /* Out of memory :( */
 		
 		/* Pop first free slot */
