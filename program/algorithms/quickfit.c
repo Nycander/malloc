@@ -55,7 +55,7 @@ static Header* allocate_blocks(Header * list, unsigned int units, unsigned int b
 	for(i = 0; i < blocks; i++)
 	{
 		new_slot = (Header *) previous_program_break + sizeof(Header)*units*i;
-		new_slot->s.size = blocks;
+		new_slot->s.size = units;
 		free((void*)(new_slot+1));
 	}
 	return list;
@@ -114,23 +114,11 @@ void *malloc(size_t nbytes)
 	/* Go through all elements in the free list */
 	for (;;)
 	{
-		/* Have we looked at all elements in the list? */
-		if (current_pointer == freelists[NRQUICKLISTS-1])
-		{
-			/* Ask for more memory! */
-			current_pointer = allocate_blocks(current_pointer, (nunits < NALLOC ? NALLOC : nunits), 1);
-			if (current_pointer == NULL)
-			{
-				/* Memory full */
-				return NULL;
-			}
-		}
-		
 		/* Is this slot big enough? */
-		if (current_pointer->s.size >= nunits) 
+		if (current_pointer->s.size >= nunits)
 		{
 			/* Is it exactly big enough? */
-			if (current_pointer->s.size == nunits) 
+			if (current_pointer->s.size == nunits)
 			{
 				/* Remove the slot */
 				previous_pointer->s.next = current_pointer->s.next;
@@ -145,8 +133,20 @@ void *malloc(size_t nbytes)
 			}
 			return (void *)(current_pointer+1);
 		}
-	
 		
+		/* Have we looked at all elements in the list? */
+		if (current_pointer == freelists[NRQUICKLISTS-1])
+		{
+			/* Ask for more memory! */
+			current_pointer = allocate_blocks(freelists[NRQUICKLISTS-1],
+					(nunits < NALLOC ? NALLOC : nunits), 1);
+			if (current_pointer == NULL)
+			{
+				/* Memory full */
+				return NULL;
+			}
+		}
+
 		/* Increment pointers */
 		previous_pointer = current_pointer;
 		current_pointer = current_pointer->s.next;
@@ -165,7 +165,7 @@ void free(void *target)
 
 	/* Point to block header */
 	target_head = (Header *)target - 1; 
-	
+	max_units = SMALLEST_LIST;
 	for(i = 0; i < NRQUICKLISTS-1; i++, max_units *= 2)
 	{
 		/* Does not fit yet? -- Next! */
@@ -177,10 +177,12 @@ void free(void *target)
 		freelists[i] = target_head;
 		return;
 	}
-
+	
 	/* It did not fit in our quicklists! */
 	/* Perform firstfit-free */
 	
+	/* TODO: Patch this with worstfit / bestfit */
+
 	/* Go through the free list in an attempt to find a block to merge with */
 	for(p = freelists[NRQUICKLISTS-1]; ;p = p->s.next)
 	{
