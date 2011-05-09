@@ -62,8 +62,8 @@ void *malloc(size_t nbytes)
     /* First run, initialize the free list */
     if (previous_pointer == NULL)
     {
-        base.s.pointer = freelist = previous_pointer = &base;
-        base.s.size = 0;
+        base->s.pointer = freelist = previous_pointer = &base;
+        base->s.size = 0;
     }
 
     current_pointer = previous_pointer->s.pointer;
@@ -119,61 +119,57 @@ void free(void *target)
     Header *target_head, *current_p, prev_p, next_p;
     target_head = (Header *)target - 1; /* point to block header */
     Header *block = target_head;
-    int first = 1;
-    int merges = 0;
     current_p = freelist;
     prev_p = freelist;
+    next_p = current_p->s.pointer;
     /* look for merge opportunities, merge and take the merged block
      * out of linked list.*/
-    while (current_p != freelist || first == 1)
-    {
-        if(target_head.s.pointer == current_p.s.pointer+current_p.s.size) /* freed block at end of empty space?*/
+    do{
+        if(current_p+current_p->s.size == target_head) /* freed block at end of empty space?*/
         {
-            if(first==1) freelist = next_p;
-            prev_p.s.pointer-> = next_p;
-            block = prev_p;
-            block
-            merges = 1;
-        }
-        if(target_head+target_head.s.size == current_p) /* freed block at start of empty space?*/
-        {
-            if(first==1) freelist = next_p;
-            prev_p.s.pointer-> = next_p;
-            block = prev_p;
-            if(merges == 1)
-            {
+            if(current_p == freelist) freelist = next_p;
+            else prev_p->s.pointer = next_p;
+            /*fixa cirkel länkning för sista elementet.*/
 
-                break;
-            }
+            current_p->s.size += block->s.size;
+            block = current_p;
+
         }
-        break; /* freed block at start or end of arena */
+        if(target_head+target_head->s.size == current_p) /* freed block at start of empty space?*/
+        {
+            if(current_p == freelist) freelist = next_p;
+            else prev_p->s.pointer = next_p;
+
+            block->s.size += current_p->s.size;
+        }
 
         /* Update pointers */
-        first = 0;
-        prev_p = current_p->s.pointer;
-        current_p = current_p->s.pointer;
-        next_p = current_p->s.pointer;
+        prev_p = current_p;
+        current_p = next_p;
+        next_p = next_p->s.pointer;
     }
+    while (current_p != freelist);
 
-    if (target_head + target_head->s.size == current_p->s.pointer)
+    for(;;)
     {
-        /* join to new_slotper nbr */
-        target_head->s.size += current_p->s.pointer->s.size;
-        target_head->s.pointer = current_p->s.pointer->s.pointer;
+        if(current_p->s.size =< block->s.size)
+        {
+             prev_p->s.pointer = block;
+             block->s.pointer = current_p;
+             if(freelist == current_p) freelist = block;
+             break;
+        }
+        if(next_p == freelist)
+        {
+            current_p->s.pointer = block;
+            block->s.pointer = next_p;
+            break;
+        }
+        /* Update pointers */
+        prev_p = current_p;
+        current_p = next_p;
+        next_p = next_p->s.pointer;
     }
-    else
-        target_head->s.pointer = current_p->s.pointer;
-
-    if (current_p + current_p->s.size == target_head)
-    {
-        /* join to lower nbr */
-        current_p->s.size += target_head->s.size;
-        p->s.pointer = target_head->s.pointer;
-    }
-    else
-        p->s.pointer = target_head;
-
-    freelist = p;
 }
 
 
