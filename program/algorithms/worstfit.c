@@ -41,72 +41,73 @@ static Header *morecore(unsigned int number_of_units)
     return freelist;
 }
 
+
 /* malloc: general-purpose storage allocator */
 void *malloc(size_t nbytes)
 {
-	Header *current_pointer, *previous_pointer;
-	unsigned int nunits;
+    Header *current_pointer, *previous_pointer;
+    unsigned int nunits;
 
-	/* Don't allocate blocks with zero bytes */
-	if (nbytes == 0)
-	{
-		return NULL;
-	}
+    /* Don't allocate blocks with zero bytes */
+    if (nbytes == 0)
+    {
+        return NULL;
+    }
 
-	/* Use number magic to get good roundoff */
-	nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
+    /* Use number magic to get good roundoff */
+    nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
 
 
-	/* First run, initialize the free list */	
-	if (freelist== NULL) 
-	{
-		base.s.next = freelist = &base;
-		base.s.size = 0;
-	}
+    /* First run, initialize the free list */	
+    if (freelist== NULL) 
+    {
+        base.s.pointer = freelist = &base;
+        base.s.size = 0;
+    }
 
-	previous_pointer = freelist;
-	current_pointer = previous_pointer->s.next;
+    previous_pointer = freelist;
+    current_pointer = previous_pointer->s.pointer;
 
-	/* Go through all elements in the free list */
-	for (;;)
-	{
-		/* Is this slot big enough? */
-		if (current_pointer->s.size >= nunits) 
-		{
-			/* Is it exactly big enough? */
-			if (current_pointer->s.size == nunits) 
-			{
-				/* Remove the slot */
-				previous_pointer->s.next = current_pointer->s.next;
-			}
-			else 
-			{
-				/* Remove units from slot */
-				current_pointer->s.size -= nunits;
-				/* Create a new slot at the end of the big slot */ 
-				current_pointer += current_pointer->s.size;
-				current_pointer->s.size = nunits;
-			}
-			return (void *)(current_pointer+1);
-		}
-	
-		/* Have we looked at all elements in the list? */
-		if (current_pointer == freelist)
-		{
-			/* Ask for more memory! */
-			current_pointer = morecore(nunits);
-			if (current_pointer == NULL)
-			{
-				/* Memory full */
-				return NULL;
-			}
+    /* Go through all elements in the free list */
+    for (;;)
+    {
+        /* Is this slot big enough? */
+        if (current_pointer->s.size >= nunits) 
+        {
+            /* Is it exactly big enough? */
+            if (current_pointer->s.size == nunits) 
+            {
+                /* Remove the slot */
+                previous_pointer->s.pointer = current_pointer->s.pointer;
+            }
+            else 
+            {
+                /* Remove units from slot */
+                current_pointer->s.size -= nunits;
+                /* Create a new slot at the end of the big slot */ 
+                current_pointer += current_pointer->s.size;
+                current_pointer->s.size = nunits;
+            }
+            return (void *)(current_pointer+1);
+        }
 
-		}
-		
-		/* Increment pointers */
-		previous_pointer = current_pointer;
-		current_pointer = current_pointer->s.next;
-	}
+        /* Have we looked at all elements in the list? */
+        if (current_pointer == freelist)
+        {
+            /* Ask for more memory! */
+            current_pointer = morecore(nunits);
+            if (current_pointer == NULL)
+            {
+                /* Memory full */
+                return NULL;
+            }
+
+        }
+
+        /* Increment pointers */
+        previous_pointer = current_pointer;
+        current_pointer = current_pointer->s.pointer;
+    }
 }
 
 /* free: put block target in free list */
@@ -115,29 +116,44 @@ void free(void *target)
     if (target == NULL)
         return;
 
-    Header *target_head, *current_p, prev_p, next_p;
+    Header *target_head, *current_p, *prev_p, *next_p;
+
+    prev_p = freelist;
+    current_p = prev_p->s.pointer;
+    next_p = current_p->s.pointer;
+
     target_head = (Header *)target - 1; /* point to block header */
     Header *block = target_head;
-    current_p = freelist;
-    prev_p = freelist;
-    next_p = current_p->s.pointer;
     /* look for merge opportunities, merge and take the merged block
      * out of linked list.*/
     do{
-        if(current_p+current_p->s.size == target_head) /* freed block at end of empty space?*/
+        if(current_p + current_p->s.size == target_head) /* freed block at end of empty space?*/
         {
-            if(current_p == freelist) freelist = next_p;
-            else prev_p->s.pointer = next_p;
+            if(current_p == freelist)
+            {
+                freelist = next_p;
+                prev_p->s.pointer = freelist;
+            }
+            else
+            {
+                prev_p->s.pointer = next_p;
+            }
             /*fixa cirkel länkning för sista elementet.*/
 
             current_p->s.size += block->s.size;
             block = current_p;
-
         }
-        if(target_head+target_head->s.size == current_p) /* freed block at start of empty space?*/
+        if(target_head + target_head->s.size == current_p) /* freed block at start of empty space?*/
         {
-            if(current_p == freelist) freelist = next_p;
-            else prev_p->s.pointer = next_p;
+            if(current_p == freelist)
+            {
+                freelist = next_p;
+                prev_p->s.pointer = freelist;
+            }
+            else
+            {
+                prev_p->s.pointer = next_p;
+            }
 
             block->s.size += current_p->s.size;
         }
@@ -151,12 +167,13 @@ void free(void *target)
 
     for(;;)
     {
-        if(current_p->s.size =< block->s.size)
+        if(current_p->s.size <= block->s.size)
         {
-             prev_p->s.pointer = block;
-             block->s.pointer = current_p;
-             if(freelist == current_p) freelist = block;
-             break;
+            prev_p->s.pointer = block;
+            block->s.pointer = current_p;
+            if(freelist == current_p)
+                freelist = block;
+            break;
         }
         if(next_p == freelist)
         {
@@ -192,7 +209,7 @@ void *realloc(void * oldpointer, size_t new_size)
 
     int copy_size = (old_size < new_size ? old_size : new_size);
 
-    newpointer = memcpy(newpointer, oldpointer, copy_size);
+    /*newpointer =*/ memcpy(newpointer, oldpointer, copy_size);
     free(oldpointer);
     return newpointer;
 }
