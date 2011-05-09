@@ -42,72 +42,71 @@ static Header *morecore(unsigned int number_of_units)
 }
 
 /* malloc: general-purpose storage allocator */
-/* WARNING BAD CODE STEAL THE OLD ONE! */
 void *malloc(size_t nbytes)
 {
-    Header *current_pointer, *previous_pointer;
-    unsigned int nunits;
+	Header *current_pointer, *previous_pointer;
+	unsigned int nunits;
 
-    /* Don't allocate blocks with zero bytes */
-    if (nbytes == 0)
-    {
-        return NULL;
-    }
+	/* Don't allocate blocks with zero bytes */
+	if (nbytes == 0)
+	{
+		return NULL;
+	}
 
-    /* Use number_of_unitsmber magic to get good roundoff */
-    nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
+	/* Use number magic to get good roundoff */
+	nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
 
-    previous_pointer = freelist;
 
-    /* First run, initialize the free list */
-    if (previous_pointer == NULL)
-    {
-        base->s.pointer = freelist = previous_pointer = &base;
-        base->s.size = 0;
-    }
+	/* First run, initialize the free list */	
+	if (freelist== NULL) 
+	{
+		base.s.next = freelist = &base;
+		base.s.size = 0;
+	}
 
-    current_pointer = previous_pointer->s.pointer;
+	previous_pointer = freelist;
+	current_pointer = previous_pointer->s.next;
 
-    for (;;)
-    {
-        /* Is this slot big enough? */
-        if (current_pointer->s.size == max)
-        {
-            /* Is it exactly big enough? */
-            if (current_pointer->s.size == nunits)
-            {
-                /* Remove the slot */
-                previous_pointer->s.pointer = current_pointer->s.pointer;
-            }
-            else
-            {
-                /* Remove units from slot */
-                current_pointer->s.size -= nunits;
-                /* Create a new slot at the end of the big slot */
-                current_pointer += current_pointer->s.size;
-                current_pointer->s.size = nunits;
-            }
-            freelist = previous_pointer;
-            return (void *)(current_pointer+1);
-        }
+	/* Go through all elements in the free list */
+	for (;;)
+	{
+		/* Is this slot big enough? */
+		if (current_pointer->s.size >= nunits) 
+		{
+			/* Is it exactly big enough? */
+			if (current_pointer->s.size == nunits) 
+			{
+				/* Remove the slot */
+				previous_pointer->s.next = current_pointer->s.next;
+			}
+			else 
+			{
+				/* Remove units from slot */
+				current_pointer->s.size -= nunits;
+				/* Create a new slot at the end of the big slot */ 
+				current_pointer += current_pointer->s.size;
+				current_pointer->s.size = nunits;
+			}
+			return (void *)(current_pointer+1);
+		}
+	
+		/* Have we looked at all elements in the list? */
+		if (current_pointer == freelist)
+		{
+			/* Ask for more memory! */
+			current_pointer = morecore(nunits);
+			if (current_pointer == NULL)
+			{
+				/* Memory full */
+				return NULL;
+			}
 
-        /* Have we looked at all elements in the list? */
-        if (current_pointer == freelist)
-        {
-            /* Ask for more memory! */
-            current_pointer = morecore(nunits);
-            if (current_pointer == NULL)
-            {
-                /* Memory full */
-                return NULL;
-            }
-
-        }
-
-        /* Increment pointers */
-        previous_pointer = current_pointer;
-        current_pointer = current_pointer->s.pointer;
-    }
+		}
+		
+		/* Increment pointers */
+		previous_pointer = current_pointer;
+		current_pointer = current_pointer->s.next;
+	}
 }
 
 /* free: put block target in free list */
