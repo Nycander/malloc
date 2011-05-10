@@ -1,6 +1,5 @@
 #include <unistd.h>
-#include <stdio.h>
-
+#include <string.h>
 #include "../malloc.h"
 #include "../brk.h"
 
@@ -9,13 +8,13 @@
 typedef long int Align; /* for alignment to long boundary */
 union header
 {
-    /* block header */
-    struct
-    {
-        union header *next; /* next block if on free list */
-        unsigned int size; /* size of this block */
-    } s;
-    Align x; /* force alignment of blocks */
+	/* block header */
+	struct
+	{
+		union header *next; /* next block if on free list */
+		unsigned int size; /* size of this block */
+	} s;
+	Align x; /* force alignment of blocks */
 };
 
 typedef union header Header;
@@ -27,244 +26,168 @@ static Header *freelist = NULL;
 /* morecore: ask system for more memory */
 static Header *morecore(unsigned int number_of_units)
 {
-    char *cp;
-    Header *new_slot;
-    if (number_of_units < NALLOC)
-        number_of_units = NALLOC;
-
-    cp = sbrk(number_of_units * sizeof(Header));
-    if (cp == (char *) -1) /* no space at all */
-        return NULL;
-
-    new_slot = (Header *) cp;
-    new_slot->s.size = number_of_units;
-    free((void *)(new_slot+1));
-    return freelist;
-}
-
-void putBlock(Header* block)
-{
-
-    Header *prev_p;
-    Header *current_p;
-    Header *next_p;
-
-    prev_p    = freelist;
-    current_p = prev_p->s.next;
-    next_p    = current_p->s.next;
-
-    for(;;)
-    {
-        if(current_p->s.size >= block->s.size) /* The only difference between best and worst?*/
-        {
-            prev_p->s.next = block;
-            block->s.next = current_p;
-            if(freelist == current_p)
-                freelist = block;
-            break;
-        }
-        if(current_p == freelist)
-        {
-            prev_p->s.next = block;
-            block->s.next = current_p;
-            break;
-        }
-        /* Update pointers */
-        prev_p = current_p;
-        current_p = next_p;
-        next_p = next_p->s.next;
-    }
+	char * previous_program_break;
+	Header *new_slot;
+	if (number_of_units < NALLOC)
+		number_of_units = NALLOC;
+	
+	previous_program_break = sbrk(number_of_units * sizeof(Header));
+	if (previous_program_break == (char *) -1) /* no space at all */
+		return NULL;
+	
+	new_slot = (Header *) previous_program_break;
+	new_slot->s.size = number_of_units;
+	free((void *)(new_slot+1));
+	return freelist;
 }
 
 /* malloc: general-purpose storage allocator */
 void *malloc(size_t nbytes)
 {
-    /* Don't allocate blocks with zero bytes */
-    if (nbytes == 0)
-    {
-        return NULL;
-    }
+	Header *current_pointer, *previous_pointer;
+	unsigned int nunits;
 
-    Header *current_p;
-    Header *prev_p;
+	/* Don't allocate blocks with zero bytes */
+	if (nbytes == 0)
+	{
+		return NULL;
+	}
 
-
-
-    unsigned int nunits;
-    /* Use number magic to get good roundoff */
-    nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
+	/* Use number magic to get good roundoff */
+	nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
 
 
-    /* First run, initialize the free list */	
-    if (freelist== NULL) 
-    {
-        base.s.next = freelist = &base;
-        base.s.size = 0;
-    }
+	/* First run, initialize the free list */	
+	if (freelist== NULL) 
+	{
+		base.s.next = freelist = &base;
+		base.s.size = 0;
+	}
 
-    prev_p = freelist;
-    current_p = prev_p->s.next;
+	previous_pointer = freelist;
+	current_pointer = previous_pointer->s.next;
 
-    /* Go through all elements in the free list */
-    for (;;)
-    {
-        /* Is this slot big enough? */
-        if (current_p->s.size >= nunits) 
-        {
-            /* Is it exactly big enough? */
-            if (current_p->s.size == nunits) 
-            {
-                if(current_p == freelist)
-                {
-                    freelist = current_p->s.next;
-                }
-                /* Remove the slot */
-                prev_p->s.next = current_p->s.next;
-            }
-            else
-            {
-                if(current_p == freelist)
-                    freelist = current_p->s.next;
-                Header* tmp = current_p;
-                /* Remove units from slot */
-                current_p->s.size -= nunits;
-                /* Create a new slot at the end of the big slot */ 
-                current_p += current_p->s.size;
-                current_p->s.size = nunits;
+	/* Go through all elements in the free list */
+	for (;;)
+	{
+		/* Is this slot big enough? */
+		if (current_pointer->s.size >= nunits) 
+		{
+			/* Is it exactly big enough? */
+			if (current_pointer->s.size == nunits) 
+			{
+				/* Remove the slot */
+				previous_pointer->s.next = current_pointer->s.next;
+			}
+			else 
+			{
+				/* Remove units from slot */
+				current_pointer->s.size -= nunits;
+				/* Create a new slot at the end of the big slot */ 
+				current_pointer += current_pointer->s.size;
+				current_pointer->s.size = nunits;
+			}
+			return (void *)(current_pointer+1);
+		}
+	
+		/* Have we looked at all elements in the list? */
+		if (current_pointer == freelist)
+		{
+			/* Ask for more memory! */
+			current_pointer = morecore(nunits);
+			if (current_pointer == NULL)
+			{
+				/* Memory full */
+				return NULL;
+			}
 
-                prev_p->s.next = tmp->s.next;
-                fprintf(stderr, "putting block...");
-                putBlock(tmp);
-                fprintf(stderr, "DONE.\n");
-            }
-            return (void *)(current_p+1);
-        }
-
-        /* Have we looked at all elements in the list? */
-        fprintf(stderr, "\\  /  ");
-        if (current_p == freelist)
-        {
-        fprintf(stderr, "Wrapedidoo");
-        if (current_p == freelist)
-            /* Ask for more memory! */
-            current_p = morecore(nunits);
-            if (current_p == NULL)
-            {
-                /* Memory full */
-                return NULL;
-            }
-
-        }
-        /* Increment pointers */
-        prev_p = current_p;
-        current_p = current_p->s.next;
-    }
+		}
+		
+		/* Increment pointers */
+		previous_pointer = current_pointer;
+		current_pointer = current_pointer->s.next;
+	}
 }
 
-/* free: put block target in free list */
+/* free: put block in free list */
 void free(void *target)
 {
-    if (target == NULL)
-        return;
+	if (target == NULL)
+		return;
+	
+	Header *p;
+	Header *target_head = (Header *)target - 1; /* Point to block header */
+	
+	/* Go through the free list in an attempt to find a block to merge with */
+	for(p = freelist; ;p = p->s.next)
+	{
+		/* Is the freë́'d block in between two free blocks? */
+		if (p <= target_head && p->s.next >= target_head)
+			break;
+		
+		/* Are we not counting upwards in memory? */
+		/* Eqv. - Have we checked all slots? */
+		if (p >= p->s.next)
+		{
+			/* Free'd block at start of area */
+			if (target_head > p)
+				break;
+		
+			/* Free'd block at end of area */
+			if (target_head < p->s.next)
+				break;
+		}
+	}
+	/* After this loop, p should be set to a block next to the target block in memory */
 
-
-    Header *current_p;
-    Header *prev_p;
-    Header *next_p;
-
-    prev_p    = freelist;
-    current_p = prev_p->s.next;
-    next_p    = current_p->s.next;
-
-    Header *block_p = (Header *)target - 1; /* point to block header */
-
-    /* look for merge opportunities, merge and take the merged block
-     * out of linked list.*/
-    do
-    {
-        if(current_p + current_p->s.size == block_p) /* freed block at end of empty space?*/
-        {
-            if(current_p == freelist)
-            {
-                freelist = next_p;
-                prev_p->s.next = freelist;
-            }
-            else
-            {
-                prev_p->s.next = next_p;
-            }
-
-            current_p->s.size += block_p->s.size;
-            block_p = current_p;
-        }
-        if(block_p + block_p->s.size == current_p) /* freed block at start of empty space?*/
-        {
-            if(current_p == freelist)
-            {
-                freelist = next_p;
-                prev_p->s.next = freelist;
-            }
-            else
-            {
-                prev_p->s.next = next_p;
-            }
-
-            block_p->s.size += current_p->s.size;
-        }
-
-        /* Update pointers */
-        prev_p    = current_p;
-        current_p = next_p;
-        next_p    = next_p->s.next;
-    }
-    while (current_p != freelist);
-
-    for(;;)
-    {
-        if(current_p->s.size <= block_p->s.size)
-        {
-            prev_p->s.next = block_p;
-            block_p->s.next = current_p;
-            if(freelist == current_p)
-                freelist = block_p;
-            break;
-        }
-        if(current_p == freelist)
-        {
-            prev_p->s.next = block_p;
-            block_p->s.next = current_p;
-            break;
-        }
-        /* Update pointers */
-        prev_p    = current_p;
-        current_p = next_p;
-        next_p    = next_p->s.next;
-    }
+	/* Join target to p.next */
+	if (target_head + target_head->s.size == p->s.next)
+	{ 
+		target_head->s.size += p->s.next->s.size;
+		target_head->s.next = p->s.next->s.next;
+	}
+	else
+	{
+		/* Merge up failed, just link them together */
+		target_head->s.next = p->s.next;
+	}
+	
+	/* Join target to p */
+	if (p + p->s.size == target_head)
+	{
+		p->s.size += target_head->s.size;
+		p->s.next = target_head->s.next;
+	}
+	else
+	{
+		/* Merge down failed, just link them together */
+		p->s.next = target_head;
+	}
 }
 
 
 void *realloc(void * oldpointer, size_t new_size)
 {
-    /* If next is NULL, then the call is equivalent to malloc */
-    if (oldpointer == NULL)
-    {
-        return malloc(new_size);
-    }
-    /* If size is equal to zero then the call is equivalent to free */
-    if (new_size == 0)
-    {
-        free(oldpointer);
-        return NULL;
-    }
-    int old_size = (((Header*)oldpointer - 1)->s.size-1)*sizeof(Header);
+	/* If pointer is NULL, then the call is equivalent to malloc */
+	if (oldpointer == NULL)
+	{
+		return malloc(new_size);
+	}
+	/* If size is equal to zero then the call is equivalent to free */
+	if (new_size == 0)
+	{
+		free(oldpointer);
+		return NULL;
+	}
+	int old_size = (((Header*)oldpointer - 1)->s.size-1)*sizeof(Header);
 
-    /* Allocate new space, copy contents and free old space */
-    void * newpointer = malloc(new_size);
+	/* Allocate new space, copy contents and free old space */
+	void * newpointer = malloc(new_size);
+	
+	int copy_size = (old_size < new_size ? old_size : new_size);
 
-    int copy_size = (old_size < new_size ? old_size : new_size);
-
-    /*newpointer =*/ memcpy(newpointer, oldpointer, copy_size);
-    free(oldpointer);
-    return newpointer;
+	newpointer = memcpy(newpointer, oldpointer, copy_size);
+	free(oldpointer);
+	return newpointer;
 }
 
