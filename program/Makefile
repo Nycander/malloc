@@ -6,9 +6,9 @@ OBJ	= malloc.o tstalgorithms.o  tstcrash_simple.o\
 
 BIN	= t0 t1 t2 t3 t4 t5 t6 t7
 
-CFLAGS	= -g -Wall -ansi -DSTRATEGY=4
+CFLAGS	= -g -Wall -ansi -DSTRATEGY=2
 
-XFLAGS	= -g -Wall -DSTRATEGY=4
+XFLAGS	= -g -Wall -DSTRATEGY=2
 
 #CC	= gcc -ansi -pedantic -Wall -g -pipe -O -pg
 CC	= gcc 

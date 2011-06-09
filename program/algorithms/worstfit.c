@@ -103,7 +103,7 @@ void *malloc(size_t nbytes)
         }
     }
     else
-    {/*allocate tail and head*/
+    {
         largest->s.size -= nunits;
         largest += largest->s.size;
         largest->s.size = nunits;

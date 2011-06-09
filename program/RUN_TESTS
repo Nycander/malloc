@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/bash
 echo "-- Testing your implementation of malloc --"
 echo ""
 echo "- If you have any problem in passing a test read the corresponding"

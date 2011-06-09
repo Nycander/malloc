@@ -1,3 +1,4 @@
+#include <string.h>
 #if   STRATEGY==1
 	#include "algorithms/firstfit.c"
 #elif STRATEGY==2

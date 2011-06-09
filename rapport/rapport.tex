@@ -94,8 +94,8 @@ Vidare ska även samtliga algoritmers prestanda utvärderas utförligt i några 
 \item[1.] \textbf{\footnotesize Hur mycket minne slösas bort i medel och i värsta fallet i de block som allokeras via malloc() ur ``Quick fit'' listorna?}
 
 Quick fit listorna tar emot block av jämna två potenser av ett
-förutbestämmt värde. Det betyder att den tillåtna blockstorleken i
-varje lista dubblas för varje liste ända tills den sista listan. I
+förutbestämt värde. Det betyder att den tillåtna blockstorleken i
+varje lista dubblas för varje lista ända tills den sista listan. I
 det värsta fallet får ett block precis inte plats i ett en lista utan är en
 enhet för stor, vilket betyder att den måste placeras i listan för dubbelt så
 stora block.
@@ -120,11 +120,20 @@ andelen spill kommer att komma ifrån de större block listorna, eftersom dem ha
 mer minne att spilla. Medelvärdet kommer alltså att domineras av de större
 blockstorlekarna. De större blockstorlekarna kommer dessutom att ha ett mycket
 snarlikt medelvärde, alltså kan vi approximera hela medelvärdet till medelvärdet
-av det största blocket.
+hos listan med störst block. Medelvärdet av minnesspillet i den sista listan är:
 
 \begin{equation*}
-\sum^n_{i=1}\frac{i}{n} = 2n + 1
+\sum^n_{i=1}\frac{i}{n} = \frac{n + 1}{2}
 \end{equation*}
+\begin{equation*}
+\frac{\frac{n + 1}{2}}{n} = \frac{n+1}{2n} = \frac{1}{2} + \frac{1}{2n}
+\end{equation*}
+
+Där $n$ är storleken på det blocken i den sista listan. Det slutgiltiga uttrycket
+för andelen minnesspill $\frac{1}{2} + \frac{1}{2n}$ består av två
+termer: $\frac{1}{2}$ som är värsta fallet ($50\%$) och $\frac{1}{2n}$, när $n$
+ökar kommer den andra termen minska i värde och uttrycket kommer närma sig värstafallet. 
+Medelfallet kommer i praktiken tyvärr att ligga ganska nära värstafallet $50\%$ spill.
 
 \end{enumerate}
 
