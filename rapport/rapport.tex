@@ -87,9 +87,38 @@ De olika minnesallokeringsmetoderna som ska implementeras är:
 \subsection{Förberedelsefråga}
 
 \begin{enumerate}
-	\item[1.] \textbf{\footnotesize Hur mycket minne slösas bort i medel och i värsta fallet i de block som allokeras via malloc() ur ``Quick fit'' listorna?}
+\item[1.] \textbf{\footnotesize Hur mycket minne slösas bort i medel och i värsta fallet i de block som allokeras via malloc() ur ``Quick fit'' listorna?}
 
-	\verb!TODO!
+Quick fit listorna tar emot block av jämna två potenser av ett
+förutbestämmt värde. Det betyder att den tillåtna blockstorleken i
+varje lista dubblas för varje liste ända tills den sista listan. I
+det värsta fallet får ett block precis inte plats i ett en lista utan är en
+enhet för stor, vilket betyder att den måste placeras i listan för dubbelt så
+stora block.
+
+\begin{math}
+n+1 > n\\
+2n - (n+1)\\
+n-1\\
+\frac{n-1}{2n} \approx \frac{1}{2}\\
+\end{math}
+
+Där n är storleken på blocket där minnet inte fick plats.
+Eftersom minnet vi ville allokera bara är något större än det block den inte
+fick plats i är den mycket nära hälften så stor nästa lista med dubbelt så många
+block. Alltså spiller vi i värsta fall nästan $50\%$ av allt vi allokerar.
+
+Medelvärdet av minnes spillet när man använder Quick Fit ökar när block
+storleken ökar (man har fler listor som tillåter större block). Den största
+andelen spill kommer att komma ifrån de större block listorna, eftersom dem har
+mer minne att spilla. Medelvärdet kommer alltså att domineras av de större
+blockstorlekarna. De större blockstorlekarna kommer dessutom att ha ett mycket
+snarlikt medelvärde, alltså kan vi approximera hela medelvärdet till medelvärdet
+av det största blocket.
+
+\begin{math}
+\sum^n_{i=1}\frac{i}{n} = 2n + 1
+\end{math}
 
 \end{enumerate}
 
@@ -107,6 +136,5 @@ De olika minnesallokeringsmetoderna som ska implementeras är:
 
 \newpage
 \section{Labbutvärdering}
-
 
 \end{document}
