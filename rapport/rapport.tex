@@ -132,7 +132,7 @@ av det största blocket.
 \section{Programbeskrivning}
 
 Programstrukturen var given i uppgiftsbeskrivningen, vi kompletterade den en del med hjälp av man-sidorna för malloc/free/realloc.
-De ändringar vi gjorde var att i \texttt{malloc.c} ha en preprocessorvillkorssats som inkluderade de olika algoritmerna beroende på vad \texttt{STRATEGY} var satt till.
+De ändringar vi gjorde var att i \texttt{malloc.c} ha en preprocessorvillkorssats som inkluderade de olika algoritmerna beroende på vad \texttt{STRATEGY} var satt till. Baskoden togs direkt från boken ``The C Programming Language'' precis som det tipsades om i boken, den koden ligger till grund för den större delen av våra implementationer.
 
 Vi hade problem med hur sorteringen skulle gå till i best/worst fit. Frågan var om man skulle försöka hålla listan sorterad in-place eller sortera om den varje gång. Men efter mycket om och men kom vi fram till att det var ingen stor förlust att sortera om listan efter varje operation från början.
 
