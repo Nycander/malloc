@@ -9,8 +9,7 @@
 
 int main(int argc, char *argv[])
 {
-	int i;
-	int *p, *q, *r;
+	int i, *p, *q, *r;
   	size_t pagesize = sysconf(_SC_PAGESIZE);
 	for(i = 0; i < TIMES; i++)
 	{

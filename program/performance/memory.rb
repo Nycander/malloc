@@ -13,7 +13,7 @@ algorithms.each_index do | strategy |
  	cmd = name.downcase.gsub(/ /, '');
 
 	system("./memory_#{cmd} 64")
-	system("./memory_#{cmd} 4096")
+	system("./memory_#{cmd} 40960")
 	system("./memory_#{cmd} 0")
 	puts
  end

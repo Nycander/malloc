@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 
-#define TIMES 1200
+#define TIMES 1000
 #define MAXSIZE 16384
 
 void test(int size)
@@ -29,7 +29,7 @@ void test(int size)
 
 		if (m[i] == NULL)
 		{
-			fprintf(stderr, "OH FUCK\n");
+			fprintf(stderr, "Failed allocation!!\n");
 			exit(12);
 		}
 	}

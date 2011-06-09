@@ -84,6 +84,10 @@ De olika minnesallokeringsmetoderna som ska implementeras är:
 	\item[Quick-fit] Som Best-fit, men istället för att alla block kontrolleras så har man ett antal listor med minne av olika storlek.
 \end{description}
 
+Dessa ska implementeras i enlighet med hjälp av ett antal givna acceptanstest.
+
+Vidare ska även samtliga algoritmers prestanda utvärderas utförligt i några väl valda aspekter.
+
 \subsection{Förberedelsefråga}
 
 \begin{enumerate}
@@ -96,14 +100,16 @@ det värsta fallet får ett block precis inte plats i ett en lista utan är en
 enhet för stor, vilket betyder att den måste placeras i listan för dubbelt så
 stora block.
 
-\begin{math}
+\begin{equation*}
+\begin{array}{c}
 n+1 > n\\
 2n - (n+1)\\
 n-1\\
 \frac{n-1}{2n} \approx \frac{1}{2}\\
-\end{math}
+\end{array}
+\end{equation*}
 
-Där n är storleken på blocket där minnet inte fick plats.
+Där $n$ är storleken på blocket där minnet inte fick plats.
 Eftersom minnet vi ville allokera bara är något större än det block den inte
 fick plats i är den mycket nära hälften så stor nästa lista med dubbelt så många
 block. Alltså spiller vi i värsta fall nästan $50\%$ av allt vi allokerar.
@@ -116,25 +122,84 @@ blockstorlekarna. De större blockstorlekarna kommer dessutom att ha ett mycket
 snarlikt medelvärde, alltså kan vi approximera hela medelvärdet till medelvärdet
 av det största blocket.
 
-\begin{math}
+\begin{equation*}
 \sum^n_{i=1}\frac{i}{n} = 2n + 1
-\end{math}
+\end{equation*}
 
 \end{enumerate}
 
 \newpage
 \section{Programbeskrivning}
 
+
+
 \newpage
 \section{Prestandautvärdering}
 
 % TODO: Använd testcases för att standardisera hur prestandamätningen görs
 
-% TODO: GRAFER! PIE-CHARTS!!!!!!!!
+Vi har valt att utföra två huvudtester; ett som mäter tidsprestanda och ett som mäter andelen overhead.
 
-% TODO: Noggrannhet?
+\subsection{Tid}
+
+Vi mäter tiden det tar att köra ett antal varierande \texttt{malloc} resp. \texttt{free} med hjälp av unix-kommandot \texttt{`time'}.
+
+
+\subsubsection{Testkod}
+
+Koden som kördes vid tillfällena visas här:
+
+\footnotesize{\lstinputlisting[language=C]{../program/performance/time.c}}
+
+\subsubsection{Resultat}
+
+Nedan finnes resultat av tidskörningarna.
+\begin{figure}[H]
+	\includegraphics[width=\textwidth]{time.png}
+	\caption{Resultat från 5 körningar av de olika algoritmerna.}
+\end{figure}
+\begin{tabular}{| l | c | c | c | c | c | c | c |}
+		\hline
+		 & Körn. 1	& Körn. 2	& Körn. 3	& Körn. 4	& Körn. 5	& Körn. 6	& Std. avvikelse. \\
+		\hline
+		System		& 1,8 s			& 1,97 s	& 1,8 s		& 1,84 s	& 1,8 s		& 1,79 s	& 0,07 s \\
+		First Fit	& 1,17 s		& 1,17 s	& 1,17 s	& 1,16 s	& 1,17 s	& 1,17 s	& 0,00 s \\
+		Best Fit	& 1,43 s		& 1,42 s	& 1,43 s	& 1,43 s	& 1,43 s	& 1,42 s	& 0,01 s \\
+		Worst Fit	& 1,39 s		& 1,41 s	& 1,39 s	& 1,39 s	& 1,39 s	& 1,39 s	& 0,01 s \\
+		Quick Fit	& 1,58 s		& 1,52 s	& 1,52 s	& 1,52 s	& 1,55 s	& 1,53 s	& 0,02 s \\
+		\hline
+\end{tabular}
+
+Vi kan utläsa att den enklaste algoritmen, `First Fit` är den snabbaste. Best och Worst fit har mer logik och kräver därför mer tid på sig. Långsammast, vilket är lite motsägelsefullt var `Quick Fit`. Detta beror på att våran Quick fit implementation aldrig förallokerar några block, utan bara allokerar så mycket som behövs. Just denna testkod är lite orättvis eftersom bara tre block allokeras åt gången, quick-fit listornas fördelar utnyttjas aldrig med så få block.
+
+
+Sammanfattningsvis kan man se att vi ligger under systemets egna tidsåtgång, vilket betyder att vi egentligen inte har några prestandaproblem i just det här fallet.
+
+\subsection{Overhead}
+
+Vi använder tre olika storlekar för mätdata en liten (64 bytes), en stor (10 sidor) och en slumpmässig (0 till 2 sidor). Dessa har allokerats 1000 gånger. Den faktiska åtgången har mäts m.h.a \texttt{sbrk(0)} och den optimala åtgången har även summerats. Dessa har dividerats för att få en faktor på hur stor del av datan som är overhead.
+
+\subsubsection{Testkod}
+
+\footnotesize{\lstinputlisting[language=C]{../program/performance/memory.c}}
+
+\subsubsection{Resultat}
+
+\begin{figure}[H]
+	\includegraphics[width=\textwidth]{overhead.png}
+\end{figure}
 
 \newpage
 \section{Labbutvärdering}
+
+Labben hade en klart annorlunda struktur är de tidigare labbarna. Nedan följer lite reflektioner kring laborationen:
+
+\begin{itemize}
+	\item Att leverera färdiga tester istället för en kravspec är en klar förbättring och gör utvecklingen mycket enklare.
+	\item Labben tvingade oss att använda och förstå debuggaren `gdb' för att hitta fel. En övning om enbart gdb hade nog varit grymt, ty den är inte särskilt intuitiv att använda.
+	\item Att ha 4 skilda algoritmer gjorde det lätt att arbeta parallellt.
+\end{itemize}
+
+Estimerat nedlagd tid: $1 \text{ arbetsvecka} \cdot 2 \text{ personer}$.
 
 \end{document}
