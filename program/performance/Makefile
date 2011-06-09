@@ -9,7 +9,8 @@ CFLAGS	= -g -Wall -ansi
 CC	= gcc 
 
 
-all: time_system time_firstfit time_bestfit time_worstfit time_quickfit 
+all: time_system time_firstfit time_bestfit time_worstfit time_quickfit \
+	 memory_system memory_firstfit memory_bestfit memory_worstfit memory_quickfit
      .PHONY : all
 
 time_system:
@@ -22,6 +23,17 @@ time_worstfit: worstfit.o
 	$(CC) $(CFLAGS) -Werror -o $@ worstfit.o time.c
 time_quickfit: quickfit.o
 	$(CC) $(CFLAGS) -Werror -o $@ quickfit.o time.c
+
+memory_system:
+	$(CC) $(CFLAGS) -Werror -o $@ memory.c
+memory_firstfit: firstfit.o
+	$(CC) $(CFLAGS) -Werror -o $@ firstfit.o memory.c
+memory_bestfit: bestfit.o
+	$(CC) $(CFLAGS) -Werror -o $@ bestfit.o memory.c
+memory_worstfit: worstfit.o
+	$(CC) $(CFLAGS) -Werror -o $@ worstfit.o memory.c
+memory_quickfit: quickfit.o
+	$(CC) $(CFLAGS) -Werror -o $@ quickfit.o memory.c
 
 firstfit.o:
 	$(CC) $(CFLAGS) -c -Werror -o $@ -DSTRATEGY=1 ../malloc.c
@@ -37,4 +49,3 @@ clean:
 
 cleanall: clean
 	\rm -f *~
-
