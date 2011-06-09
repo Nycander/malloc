@@ -42,11 +42,7 @@ void test(int size)
 
 int main(int argc, char *argv[])
 {
-	/*
-	int pagesize = sysconf(_SC_PAGESIZE);
-	fprintf(stderr, "page size = %d\n", pagesize);
-	 page size @ u3.csc.kth.se = 4096
-	*/
+	/* page size @ u3.csc.kth.se = 4096 */
   	test(atoi(argv[1]));
 
 	return 0;

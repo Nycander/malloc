@@ -140,7 +140,12 @@ Medelfallet kommer i praktiken tyvärr att ligga ganska nära värstafallet $50\
 \newpage
 \section{Programbeskrivning}
 
+Programstrukturen var given i uppgiftsbeskrivningen, vi kompletterade den en del med hjälp av man-sidorna för malloc/free/realloc.
+De ändringar vi gjorde var att i \texttt{malloc.c} ha en preprocessorvillkorssats som inkluderade de olika algoritmerna beroende på vad \texttt{STRATEGY} var satt till. Baskoden togs direkt från boken ``The C Programming Language'' precis som det tipsades om i boken, den koden ligger till grund för den större delen av våra implementationer.
 
+Vi hade problem med hur sorteringen skulle gå till i best/worst fit. Frågan var om man skulle försöka hålla listan sorterad in-place eller sortera om den varje gång. Men efter mycket om och men kom vi fram till att det var ingen stor förlust att sortera om listan efter varje operation från början.
+
+Implementeringen var sedan ganska rakt på. Gick något fel fick man använda sig av `gdb' för att stega sig igenom programmet och inspektera variabler. I slutet kontrollerades beteendet med hjälp av testfallen.
 
 \newpage
 \section{Prestandautvärdering}
@@ -158,7 +163,8 @@ Vi mäter tiden det tar att köra ett antal varierande \texttt{malloc} resp. \te
 
 Koden som kördes vid tillfällena visas här:
 
-\footnotesize{\lstinputlisting[language=C]{../program/performance/time.c}}
+\scriptsize{\lstinputlisting[language=C]{../program/performance/time.c}}
+\normalsize
 
 \subsubsection{Resultat}
 
@@ -190,13 +196,35 @@ Vi använder tre olika storlekar för mätdata en liten (64 bytes), en stor (10 
 
 \subsubsection{Testkod}
 
-\footnotesize{\lstinputlisting[language=C]{../program/performance/memory.c}}
+\scriptsize{\lstinputlisting[language=C]{../program/performance/memory.c}}
+\normalsize
 
 \subsubsection{Resultat}
 
 \begin{figure}[H]
 	\includegraphics[width=\textwidth]{overhead.png}
 \end{figure}
+
+\begin{center}
+
+	\begin{tabular}{ | >{\bfseries}l | c | c | c | r |}
+		\hline
+					& Small blocks	& Big blocks	& Mixed blocks	& Avg \\
+		\hline
+		Best Fit	& 1,28	& 1,0004	& 1,051		& 1,110 \\
+		First Fit	& 1,28	& 1,0004	& 1,0631	& 1,114 \\
+		Worst Fit	& 1,28	& 1,0004	& 1,1854	& 1,155 \\
+		Quick Fit	& 2		& 1,0004	& 1,0631	& 1,355 \\
+		System		& 2,112	& 1,0006	& 1,0169	& 1,377 \\
+		\hline
+	\end{tabular}
+\end{center}
+
+Som väntat kan vi se att Quick Fit är slösaktig med minnet. Systemets egna malloc hamnar i dåligt läge på grund av den dåliga presteringen för små block. Vidare kan vi konstantera att för stora block är overhead-datan obetydlig, som sig bör.
+
+Vi kan även se att för stora block så är quick fit ekvivalent med first fit, precis som den ska eftersom alla block hamnar i den sista listan.
+
+
 
 \newpage
 \section{Labbutvärdering}
@@ -209,6 +237,7 @@ Labben hade en klart annorlunda struktur är de tidigare labbarna. Nedan följer
 	\item Att ha 4 skilda algoritmer gjorde det lätt att arbeta parallellt.
 \end{itemize}
 
-Estimerat nedlagd tid: $1 \text{ arbetsvecka} \cdot 2 \text{ personer}$.
+Estimerat nedlagd tid: $1 \text{ arbetsvecka} \cdot 2 \text{ personer}$. \\
+Svårighetsgrad: $4/5$.
 
 \end{document}
